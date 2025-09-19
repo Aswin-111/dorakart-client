@@ -88,7 +88,7 @@ export default function InventoryPage() {
                 <td className="px-4 py-2">{item.material_name}</td>
                 <td className="px-4 py-2">{item.unit}</td>
                 <td className="px-4 py-2">{item.quantity}</td>
-                <td className="px-4 py-2">{item.product_category.category_name}</td>
+                {/* <td className="px-4 py-2">{item.product_category.category_name}</td> */}
                 <td className="px-4 py-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

@@ -255,6 +255,7 @@ export default function LeadsPage() {
                       onClick={async () => {
                         try {
                           const res = await axios.post(`/api/v1/orders/preorderdetails/${selectedOrder}`);
+                          console.log(res.data)
                           setOrderData(res.data);
                           setShowOrderConfirm(false);
                           setShowOrderModal(true);
@@ -458,7 +459,7 @@ function LeadModal({ title, onClose, data = null }) {
       note,
       address,
     };
-
+    console.log(payload)
     const toastId = toast.loading(data ? "Updating..." : "Creating...");
     try {
       if (data) {
@@ -469,8 +470,10 @@ function LeadModal({ title, onClose, data = null }) {
         toast.success("Lead created", { id: toastId });
       }
       onClose();
-    } catch {
-      toast.error("Action failed", { id: toastId });
+    } catch (err) {
+      const message = err.response.data.message
+      console.log(err)
+      toast.error(message, { id: toastId });
     }
   };
 

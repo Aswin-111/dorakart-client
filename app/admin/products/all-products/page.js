@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MoreVertical, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { MoreVertical, ChevronLeft, ChevronRight } from "lucide-react";
 import axios from "@/lib/interceptor";
 import {
   Dialog,
@@ -20,8 +20,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast, Toaster } from "react-hot-toast";
-
 import { Button } from "@/components/ui/button";
+
 export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
@@ -38,14 +38,11 @@ export default function ProductsPage() {
   async function fetchProducts() {
     try {
       const res = await axios.get(`/api/v1/products/getproducts?page=${page}&limit=10`);
-
-
-
-      console.log(res.data)
       setTotalPages(res.data.totalPages || 1);
       setProducts(res.data.products || []);
     } catch (err) {
       console.error("Failed to fetch products", err);
+      toast.error("Failed to load products");
     }
   }
 
@@ -53,119 +50,145 @@ export default function ProductsPage() {
     if (confirm("Are you sure you want to delete this product?")) {
       await axios.delete(`/api/v1/products/deleteproduct/${id}`);
       fetchProducts();
+      toast.success("Product deleted");
     }
   }
 
   async function handleEdit(id) {
     try {
       const res = await axios.get(`/api/v1/products/getproduct/${id}`);
-
-      console.log(res.data)
       setEditData(res.data.product);
       setShowEdit(true);
     } catch (err) {
       console.error("Failed to load product", err);
+      toast.error("Failed to load product");
     }
   }
 
   return (
-    <main className="flex flex-col min-h-screen bg-white font-sans max-w-[960px] px-4 py-6 mx-auto">
-      {/* Header */}
-
-
-
-
+    <main className="flex flex-col min-h-screen max-w-[1100px] px-6 py-8 mx-auto bg-background text-foreground">
       <Toaster />
+      {/* Header */}
       <div className="flex flex-wrap justify-between items-center gap-3 py-2">
-        <p className="text-[#121416] text-[32px] font-bold leading-tight min-w-72">
-          Products
-        </p>
-        <button
+        <h1 className="text-3xl font-semibold tracking-tight">Products</h1>
+        <Button
+          variant="secondary"
           onClick={() => {
             setShowCreate(true);
             fetchCategories();
           }}
-          className="rounded-full bg-[#f1f2f4] text-[#121416] h-8 px-4 text-sm font-medium"
+          className="rounded-xl"
         >
           Create Product
-        </button>
+        </Button>
       </div>
 
-      {/* Subheading */}
-
-
-      {/* Table */}
-      <div className="relative rounded-xl border border-[#f1f2f4] p-4 max-h-[90vh] overflow-y-auto">
-
-        <table className="w-full">
-          <thead>
-            <tr className="bg-white text-left text-sm font-medium text-[#121416]">
-              <th className="px-4 py-3 w-60">Name</th>
-              <th className="px-4 py-3 w-[200px]">Price</th>
-              <th className="px-4 py-3 w-[160px]">Status</th>
-              <th className="px-4 py-3 w-[140px]">Image</th>
-              <th className="px-4 py-3 w-[100px]">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products.map((product, i) => (
-              <tr key={i} className="border-t border-[#dde1e3]">
-                <td className="px-4 py-2 text-sm text-[#121416]">{product.product_name}</td>
-                <td className="px-4 py-2 text-sm text-[#6a7681]">
-                  ₹{product.selling_price} (MRP ₹{product.mrp})
-                </td>
-                <td className="px-4 py-2 text-sm">
-                  <span className="rounded-full px-4 py-1 bg-[#f1f2f4] text-[#121416] text-sm font-medium">
-                    Active
-                  </span>
-                </td>
-                <td className="px-4 py-2">
-                  <div
-                    className="w-10 h-10 rounded-full bg-cover bg-center"
-                    style={{ backgroundImage: `url(${product.product_link})` }}
-                  />
-                </td>
-                <td className="px-4 py-2 text-sm">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="p-2 rounded hover:bg-gray-100">
-                        <MoreVertical className="w-5 h-5 text-gray-600" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-28" align="end" side="bottom" sideOffset={5}>
-                      <DropdownMenuItem onClick={() => handleEdit(product.id)}>
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDelete(product.id)}>
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </td>
-
+      {/* Table card */}
+      <div className="relative rounded-2xl border border-border bg-card shadow-sm p-0 max-h-[80vh] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="sticky top-0 z-10 bg-card/80 backdrop-blur supports-[backdrop-filter]:bg-card/60 border-b border-border">
+              <tr className="text-left text-sm text-muted-foreground">
+                <th className="px-4 py-3 w-60 font-medium">Name</th>
+                <th className="px-4 py-3 w-[200px] font-medium">Price</th>
+                <th className="px-4 py-3 w-[160px] font-medium">Status</th>
+                <th className="px-4 py-3 w-[140px] font-medium">Image</th>
+                <th className="px-4 py-3 w-[100px] font-medium">Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {products.map((product, i) => (
+                <tr
+                  key={i}
+                  className="hover:bg-muted/50 transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm">
+                    <span className="font-medium text-foreground">{product.product_name}</span>
+                    {product.sku ? (
+                      <span className="ml-2 text-xs text-muted-foreground">• {product.sku}</span>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    ₹{product.selling_price}{" "}
+                    <span className="text-xs"> (MRP ₹{product.mrp})</span>
+                  </td>
+                  <td className="px-4 py-3 text-sm">
+                    <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 bg-muted text-foreground text-xs font-medium ring-1 ring-inset ring-border">
+                      • Active
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div
+                      className="w-10 h-10 rounded-xl bg-center bg-cover ring-1 ring-border shadow-sm"
+                      style={{ backgroundImage: `url(${product.product_link})` }}
+                    />
+                  </td>
+                  <td className="px-2 py-1 text-sm">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="p-2 rounded-xl hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          aria-label="Open actions"
+                        >
+                          <MoreVertical className="size-5 text-muted-foreground" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-32 bg-popover text-popover-foreground"
+                        align="end"
+                        side="bottom"
+                        sideOffset={6}
+                      >
+                        <DropdownMenuItem onClick={() => handleEdit(product.id)}>
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => handleDelete(product.id)}
+                        >
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </td>
+                </tr>
+              ))}
+              {products.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    No products found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
       <div className="flex items-center justify-center gap-2 p-4">
         <button
-          className="size-10 flex items-center justify-center text-[#121416]"
+          className="size-10 rounded-xl border border-border bg-card hover:bg-muted flex items-center justify-center"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
+          aria-label="Previous page"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="size-5 text-foreground" />
         </button>
 
         {[...Array(totalPages)].map((_, i) => {
           const p = i + 1;
+          const isActive = p === page;
           return (
             <button
               key={p}
               onClick={() => setPage(p)}
-              className={`size-10 flex items-center justify-center rounded-full text-sm ${p === page ? "font-bold bg-[#f1f2f4]" : "font-normal"
-                }`}
+              className={[
+                "size-9 rounded-full text-sm transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-card border border-border hover:bg-muted text-foreground",
+              ].join(" ")}
+              aria-current={isActive ? "page" : undefined}
             >
               {p}
             </button>
@@ -173,13 +196,13 @@ export default function ProductsPage() {
         })}
 
         <button
-          className="size-10 flex items-center justify-center text-[#121416]"
+          className="size-10 rounded-xl border border-border bg-card hover:bg-muted flex items-center justify-center"
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          aria-label="Next page"
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="size-5 text-foreground" />
         </button>
       </div>
-
 
       {/* Create Product Popup */}
       {showCreate && (
@@ -210,13 +233,13 @@ export default function ProductsPage() {
 
   async function fetchCategories() {
     const res = await axios.get("/api/v1/products/loadcategories");
-    console.log(res.data, 'qwert')
     setCategories(res.data.categories || []);
   }
 }
 
-// CreateProductPopup Component
-
+/* ===========================
+   CreateProductPopup
+   =========================== */
 
 function CreateProductPopup({ onClose, onCreated }) {
   const [categories, setCategories] = useState([]);
@@ -292,9 +315,9 @@ function CreateProductPopup({ onClose, onCreated }) {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-popover text-popover-foreground border border-border rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Create Product</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Create Product</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4 py-4">
           <InputGroup label="Product Name" name="product_name" onChange={handleChange} />
@@ -313,22 +336,37 @@ function CreateProductPopup({ onClose, onCreated }) {
           <div className="col-span-2 space-y-2">
             <Label>Photo</Label>
             <Input type="file" name="product_photo" onChange={handleChange} />
-            {preview && <img src={preview} className="w-20 h-20 object-cover rounded" />}
+            {preview && (
+              <img
+                src={preview}
+                className="w-20 h-20 object-cover rounded-xl ring-1 ring-border"
+                alt="Preview"
+              />
+            )}
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit}>Submit</Button>
+          <Button onClick={handleSubmit} className="rounded-xl">Submit</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
+/* ===========================
+   Shared Inputs
+   =========================== */
+
 function InputGroup({ label, name, onChange, value }) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      <Input name={name} value={value} onChange={onChange} />
+      <Label className="text-sm text-muted-foreground">{label}</Label>
+      <Input
+        name={name}
+        value={value}
+        onChange={onChange}
+        className="bg-background border-border"
+      />
     </div>
   );
 }
@@ -336,8 +374,13 @@ function InputGroup({ label, name, onChange, value }) {
 function SelectGroup({ label, name, onChange, options, value }) {
   return (
     <div className="space-y-2">
-      <Label>{label}</Label>
-      <select name={name} onChange={onChange} value={value} className="w-full border rounded h-10 px-2">
+      <Label className="text-sm text-muted-foreground">{label}</Label>
+      <select
+        name={name}
+        onChange={onChange}
+        value={value}
+        className="w-full h-10 px-3 rounded-md bg-background border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+      >
         <option value="">Select {label}</option>
         {options.map((opt) =>
           typeof opt === "string" ? (
@@ -353,8 +396,10 @@ function SelectGroup({ label, name, onChange, options, value }) {
   );
 }
 
+/* ===========================
+   EditProductPopup
+   =========================== */
 
-// EditProductPopup Component
 function EditProductPopup({ data, categories, onClose, onUpdated }) {
   const [form, setForm] = useState({
     ...data,
@@ -364,7 +409,6 @@ function EditProductPopup({ data, categories, onClose, onUpdated }) {
   const [localCategories, setLocalCategories] = useState([]);
 
   useEffect(() => {
-    // If categories passed are empty, fetch directly
     if (!categories || categories.length === 0) {
       axios.get("/api/v1/products/loadcategories").then((res) => {
         setLocalCategories(res.data.categories || []);
@@ -417,9 +461,9 @@ function EditProductPopup({ data, categories, onClose, onUpdated }) {
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl bg-popover text-popover-foreground border border-border rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Edit Product</DialogTitle>
         </DialogHeader>
         <div className="grid grid-cols-2 gap-4 py-4">
           <InputGroup label="Product Name" name="product_name" value={form.product_name} onChange={handleChange} />
@@ -459,7 +503,7 @@ function EditProductPopup({ data, categories, onClose, onUpdated }) {
           />
         </div>
         <DialogFooter>
-          <Button onClick={handleSubmit}>Update</Button>
+          <Button onClick={handleSubmit} className="rounded-xl">Update</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

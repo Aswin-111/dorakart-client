@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { saveAs } from "file-saver";
+import Card from "@/components/card.jsx";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -35,10 +36,38 @@ export default function OrdersPage() {
   const [selectedAssignOrderId, setSelectedAssignOrderId] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewData, setViewData] = useState(null);
+  const [isOnePayment, setIsOnePayment] = useState(null);
+  const [bill1, setBill1] = useState(null);
+  const [bill2, setBill2] = useState(null); // only for second bill
 
   useEffect(() => {
     fetchOrders();
   }, [page, filter]);
+  const handleBillUpload = async () => {
+    if (!bill1 || (isOnePayment === false && !bill2)) {
+      return toast.error("Please upload all required bill(s)");
+    }
+
+    const toastId = toast.loading("Uploading bill(s)...");
+
+    try {
+      const formData = new FormData();
+      formData.append("order_id", viewData.order_id);
+      formData.append("is_one_payment", isOnePayment);
+      formData.append("bill1", bill1);
+      if (bill2) formData.append("bill2", bill2);
+
+      await axios.post("/api/v1/orders/upload-bill", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      toast.success("Bills uploaded successfully", { id: toastId });
+      setBill1(null);
+      setBill2(null);
+    } catch (err) {
+      toast.error("Bill upload failed", { id: toastId });
+    }
+  };
 
   const fetchOrders = async () => {
     try {
@@ -132,6 +161,7 @@ export default function OrdersPage() {
   };
 
 
+
   return (
     <main className="relative flex min-h-screen flex-col bg-white font-sans overflow-x-hidden" style={{ fontFamily: 'Inter, "Noto Sans", sans-serif' }}>
       <Toaster />
@@ -194,7 +224,7 @@ export default function OrdersPage() {
                           <td className="px-5">{order.lead_id?.fullname || "N/A"}</td>
                           <td>{order.lead_id?.phone || "N/A"}</td>
 
-                          <td className="px-4 py-2">{order.status}</td>
+                          <td className="px-4 py-2"> <Card status={order.status} /></td>
                           <td className="px-4 py-2 ">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
@@ -298,8 +328,6 @@ export default function OrdersPage() {
               <div><b>Phone:</b> {viewData.phone}</div>
               <div><b>Lead Owner:</b> {viewData.lead_owner}</div>
 
-
-
               <div className="pt-2"><b>Products:</b></div>
               <ul className="list-disc pl-5 space-y-1">
                 {viewData.products.map((p, i) => (
@@ -309,12 +337,148 @@ export default function OrdersPage() {
                 ))}
               </ul>
 
-              <Button
-                className="mt-4"
-                onClick={() => downloadDesignZip(viewData.order_id)}
-              >
+              {/* 👉 ADD THIS FOR IMAGE PREVIEWS */}
+              {viewData.image_links?.length > 0 && (
+                <>
+                  <div className="pt-4 font-semibold">Order Images</div>
+                  <div className="flex gap-2 flex-wrap">
+                    {viewData.image_links.map((url, idx) => (
+                      <> <img
+                        key={idx}
+                        src={`${url}`}
+                        alt={`Order ${idx}`}
+                        className="w-20 h-20 rounded border object-cover"
+                      />
+
+                      </>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              {viewData.designed_image_links?.length > 0 && (
+                <>
+                  <div className="pt-4 font-semibold">Designed Images</div>
+                  <div className="flex gap-2 flex-wrap">
+                    {viewData.designed_image_links.map((url, idx) => (
+                      <>
+                        <img
+                          key={idx}
+                          src={url}
+                          alt={`Design ${idx}`}
+                          className="w-20 h-20 rounded border object-cover"
+                        />
+                      </>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <Button className="mt-4" onClick={() => downloadDesignZip(viewData.order_id)}>
                 Download Designs ZIP
               </Button>
+              <Label>Select Payment Type</Label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    value="one"
+                    checked={isOnePayment === true}
+                    onChange={() => { setIsOnePayment(true); setBill2(null); }}
+                  />
+                  One-Time Payment
+                </label>
+                <label className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="paymentType"
+                    value="two"
+                    checked={isOnePayment === false}
+                    onChange={() => setIsOnePayment(false)}
+                  />
+                  Two-Time Payment
+                </label>
+              </div>
+
+              {isOnePayment !== null && (
+                <div className="pt-4 flex flex-col gap-4">
+                  {/* BILL 1 */}
+                  <div>
+                    <Label>Bill 1</Label>
+                    {bill1 ? (
+                      <div className="relative w-fit">
+                        <img
+                          src={URL.createObjectURL(bill1)}
+                          alt="Bill 1"
+                          className="w-20 h-20 object-cover border rounded"
+                        />
+                        <button
+                          onClick={() => setBill1(null)}
+                          className="absolute top-[-8px] right-[-8px] bg-white text-red-600 border border-red-600 rounded-full px-1 text-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : viewData?.bill1_url ? (
+                      <div className="relative w-fit">
+                        <img
+                          src={viewData.bill1_url}
+                          alt="Bill 1"
+                          className="w-20 h-20 object-cover border rounded"
+                        />
+                      </div>
+                    ) : (
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setBill1(e.target.files[0])}
+                      />
+                    )}
+                  </div>
+
+                  {/* BILL 2 */}
+                  {!isOnePayment && (
+                    <div>
+                      <Label>Bill 2</Label>
+                      {bill2 ? (
+                        <div className="relative w-fit">
+                          <img
+                            src={URL.createObjectURL(bill2)}
+                            alt="Bill 2"
+                            className="w-20 h-20 object-cover border rounded"
+                          />
+                          <button
+                            onClick={() => setBill2(null)}
+                            className="absolute top-[-8px] right-[-8px] bg-white text-red-600 border border-red-600 rounded-full px-1 text-xs"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : viewData?.bill2_url ? (
+                        <div className="relative w-fit">
+                          <img
+                            src={viewData.bill2_url}
+                            alt="Bill 2"
+                            className="w-20 h-20 object-cover border rounded"
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setBill2(e.target.files[0])}
+                        />
+                      )}
+                    </div>
+                  )}
+
+                  <Button onClick={handleBillUpload}>
+                    Upload Bill{isOnePayment === false ? "s" : ""}
+                  </Button>
+                </div>
+              )}
+
 
 
 
@@ -322,6 +486,7 @@ export default function OrdersPage() {
           </DialogContent>
         </Dialog>
       )}
+
 
     </main>
   );
@@ -474,6 +639,7 @@ function AssignOrderModal({ orderId, onClose }) {
     const toastId = toast.loading("Assigning order...");
 
     try {
+      console.log(selectedUser, "selecteduserid")
       await axios.get("/api/v1/orders/assignorder", {
         params: {
           user_id: selectedUser,

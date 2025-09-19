@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import Card from "@/components/card.jsx";
 
 import { Button } from "@/components/ui/button";
 export default function PrintingPage() {
@@ -228,25 +229,21 @@ export default function PrintingPage() {
                             <td className="px-4 py-2 text-[#111518] text-sm font-normal">{row.lead_name}</td>
                             <td className="px-4 py-2 text-[#60768a] text-sm font-normal">{row.lead_phone}</td>
                             <td className="px-4 py-2 text-[#60768a] text-sm font-normal">{row.lead_owner_name}</td>
-                            <td className="px-4 py-2 text-sm font-normal">
-                              <button className="flex min-w-[84px] h-8 px-4 items-center justify-center rounded-full bg-[#f0f2f5] text-[#111518] text-sm font-medium">
-                                <span className="truncate">{row.status}</span>
-                              </button>
-                            </td>
-                            <td className="px-4 py-2 text-[#60768a] text-sm font-bold tracking-[0.015em] cursor-pointer"><td className="px-4 py-2 w-60 text-sm font-bold tracking-[0.015em]">
+                            <td className="px-4 py-2"> <Card status={row.status} /></td>
+
+                            <td className="px-4 py-2 w-60 text-sm font-bold tracking-[0.015em]">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <button className="p-2 rounded hover:bg-gray-100 text-lg">⋮</button>
-
                                 </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="">
+                                <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => handleView(row)}>View</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => openConfirmModal("approve", row)}>Approve</DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => openConfirmModal("ship", row)}>Ship</DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </td>
-                            </td>
+
                           </tr>
                         ))
                       )}

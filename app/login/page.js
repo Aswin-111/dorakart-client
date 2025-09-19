@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 
 const loginSchema = z.object({
     email: z.string().email("Enter a valid email"),
-    password: z.string(),
+    password: z.string().min(1, "Password is required"),
 });
 
 export default function LoginPage() {
@@ -33,8 +33,11 @@ export default function LoginPage() {
         setLoading(true);
         try {
             const res = await axios.post("/api/v1/users/login", values);
-            localStorage.setItem("dorakart_acc_token", res.data.token);
+            localStorage.setItem("dorakart_acc_token", res.data.token); // ✅ fixed key
+
             toast.success("Login successful");
+            console.log(res.data.token)
+            alert()
             router.push("/orders/leads");
         } catch (err) {
             toast.error(err?.response?.data?.message || "Login failed");
@@ -44,9 +47,9 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
             <Toaster />
-            <Card className="w-full max-w-md p-6 shadow-xl">
+            <Card className="w-full max-w-md p-6 border border-gray-200 rounded-xl shadow-md bg-white">
                 <CardHeader>
                     <CardTitle className="text-2xl text-center">Login</CardTitle>
                 </CardHeader>

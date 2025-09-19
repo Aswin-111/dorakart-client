@@ -11,6 +11,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { toast, Toaster } from "react-hot-toast";
+import Card from "@/components/card.jsx";
 
 export default function DesigningPage() {
   const [designs, setDesigns] = useState([]);
@@ -75,7 +76,7 @@ export default function DesigningPage() {
       const response = await axios.get(`/api/v1/designs/downloadorderdesigner/${selectedDownloadId}`, {
         responseType: 'blob',
       });
-
+      
       const blob = new Blob([response.data], { type: "application/zip" });
       const contentDisposition = response.headers["content-disposition"];
       const filename = contentDisposition
@@ -207,12 +208,9 @@ export default function DesigningPage() {
                           <tr key={index} className="border-t border-t-[#dbe1e6]">
                             <td className="px-4 py-2 w-[400px] text-[#111518] text-sm font-normal">{row.customer_name}</td>
                             <td className="px-4 py-2 w-[400px] text-[#60768a] text-sm font-normal">{row.phone}</td>
-                            <td className="px-4 py-2 w-[400px] text-[#60768a] text-sm font-normal">{row.lead_owner}</td>
-                            <td className="px-4 py-2 w-60">
-                              <span className="px-4 py-1 bg-[#f0f2f5] text-[#111518] text-sm rounded-full inline-block">
-                                {row.status}
-                              </span>
-                            </td>
+                            <td className="px-4 py-2 w-[400px] text-[hsl(209,18%,46%)] text-sm font-normal">{row.lead_owner}</td>
+                            <td className="px-4 py-2"> <Card status={row.status} /></td>
+
                             <td className="px-4 py-2 w-60">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
